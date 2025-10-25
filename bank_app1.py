@@ -39,7 +39,7 @@ def deposit_amount(name, amount):
     for acc in accounts:
         if acc["name"].lower() == name.lower():
             acc["balance"] += amount
-            st.success(f" Deposit Successful! New Balance: PKR {acc['balance']}")
+            st.success(f"Deposit Successful! New Balance: PKR {acc['balance']}")
             return
     st.error(" Account Not Found.")
 
@@ -72,12 +72,12 @@ def transfer_amount(sender_name, sender_pin, receiver_ac, amount):
         st.error(" Receiver account not found.")
         return
     if amount > sender["balance"]:
-        st.error(" Insufficient Balance for Transfer.")
+        st.error("Insufficient Balance for Transfer.")
         return
 
     sender["balance"] -= amount
     receiver["balance"] += amount
-    st.success(f" Transfer Successful! Remaining Balance: PKR {sender['balance']}")
+    st.success(f"Transfer Successful! Remaining Balance: PKR {sender['balance']}")
 
 
 def login(name, pin):
@@ -85,10 +85,9 @@ def login(name, pin):
     if user:
         st.session_state["logged_in_user"] = user
         st.success(f" Login Successful! Welcome, {user['name']}.")
-        st.session_state["login_message"] = True
         st.rerun()
     else:
-        st.error(" Invalid name or PIN.")
+        st.error("Invalid name or PIN.")
 
 
 def logout():
@@ -97,7 +96,7 @@ def logout():
         st.session_state["logged_in_user"] = None
         st.rerun()
     else:
-        st.warning(" No user is currently logged in.")
+        st.warning("No user is currently logged in.")
 
 
 # =============== STREAMLIT UI ===============
@@ -107,11 +106,13 @@ st.title("Simple Bank Management System")
 user = st.session_state["logged_in_user"]
 
 if user:
+    # After login — include Check Balance here
     menu = st.sidebar.selectbox(
         "Choose Action",
-        ["Welcome", "Deposit", "Withdraw", "Transfer", "Find Account", "Logout"]
+        ["Welcome", "Check Balance", "Deposit", "Withdraw", "Transfer", "Find Account", "Logout"]
     )
 else:
+    # Before login — show only Create and Login
     menu = st.sidebar.selectbox(
         "Choose Action",
         ["Create Account", "Login"]
@@ -126,50 +127,56 @@ if menu == "Create Account":
 
     if st.button("Create Account"):
         create_account(name, pin, account_number, balance)
+        # clear fields
         for key in ["name_input", "pin_input", "account_input", "balance_input"]:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
 
     # Show success message after rerun
-    if st.session_state["account_created_message"]:
-        st.success("🎉 Account Created Successfully!")
+    if st.session_state.get("account_created_message", False):
+        st.success("Account Created Successfully!")
         st.session_state["account_created_message"] = False
 
 # ---------- LOGIN ----------
 elif menu == "Login":
-    name = st.text_input("Enter Name")
-    pin = st.number_input("Enter PIN", step=1, format="%d")
+    name = st.text_input("Enter Name", key="login_name")
+    pin = st.number_input("Enter PIN", step=1, format="%d", key="login_pin")
     if st.button("Login"):
         login(name, pin)
-    
+
 # ---------- WELCOME (AFTER LOGIN) ----------
 elif menu == "Welcome":
-    st.markdown(f"###  Welcome, **{user['name']}!**")
+    st.markdown(f"### Welcome, **{user['name']}!**")
     st.info("You are now logged into your account.")
+
+# ---------- CHECK BALANCE ----------
+elif menu == "Check Balance":
+    # user guaranteed here because menu only shows this after login
+    st.info(f"Your Balance is: PKR {user['balance']}")
 
 # ---------- DEPOSIT ----------
 elif menu == "Deposit":
-    amount = st.number_input("Enter Deposit Amount", step=100.0)
+    amount = st.number_input("Enter Deposit Amount", step=100.0, key="deposit_amount")
     if st.button("Deposit"):
         deposit_amount(user["name"], amount)
 
 # ---------- WITHDRAW ----------
 elif menu == "Withdraw":
-    amount = st.number_input("Enter Withdraw Amount", step=100.0)
+    amount = st.number_input("Enter Withdraw Amount", step=100.0, key="withdraw_amount")
     if st.button("Withdraw"):
         withdraw_amount(user["name"], user["pin"], amount)
 
 # ---------- TRANSFER ----------
 elif menu == "Transfer":
-    receiver = st.number_input("Enter Receiver Account Number", step=1, format="%d")
-    amount = st.number_input("Enter Amount to Transfer", step=100.0)
+    receiver = st.number_input("Enter Receiver Account Number", step=1, format="%d", key="transfer_receiver")
+    amount = st.number_input("Enter Amount to Transfer", step=100.0, key="transfer_amount")
     if st.button("Transfer"):
         transfer_amount(user["name"], user["pin"], receiver, amount)
 
 # ---------- FIND ACCOUNT ----------
 elif menu == "Find Account":
-    search_name = st.text_input("Enter Name to Search")
+    search_name = st.text_input("Enter Name to Search", key="find_name")
     if st.button("Search"):
         found = False
         for acc in accounts:
@@ -177,7 +184,7 @@ elif menu == "Find Account":
                 st.info(f"Account Found — {acc}")
                 found = True
         if not found:
-            st.error(" Account Not Found!")
+            st.error("Account Not Found!")
 
 # ---------- LOGOUT ----------
 elif menu == "Logout":
