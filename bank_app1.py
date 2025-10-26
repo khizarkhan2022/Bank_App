@@ -109,13 +109,13 @@ if user:
     # After login — include Check Balance here
     menu = st.sidebar.selectbox(
         "Choose Action",
-        ["Welcome", "Check Balance", "Deposit", "Withdraw", "Transfer", "Find Account", "Logout"]
+        ["Welcome", "Check Balance", "Deposit", "Withdraw", "Transfer", "Logout"]
     )
 else:
     # Before login — show only Create and Login
     menu = st.sidebar.selectbox(
         "Choose Action",
-        ["Create Account", "Login"]
+        ["Create Account", "Login", "Find Account"]
     )
 
 # ---------- CREATE ACCOUNT ----------
@@ -144,6 +144,18 @@ elif menu == "Login":
     pin = st.number_input("Enter PIN", step=1, format="%d", key="login_pin")
     if st.button("Login"):
         login(name, pin)
+
+# ---------- FIND ACCOUNT ----------
+elif menu == "Find Account":
+    search_name = st.text_input("Enter Name to Search", key="find_name")
+    if st.button("Search"):
+        found = False
+        for acc in accounts:
+            if acc["name"].lower() == search_name.lower():
+                st.info(f"Account Found — {acc}")
+                found = True
+        if not found:
+            st.error("Account Not Found!")
 
 # ---------- WELCOME (AFTER LOGIN) ----------
 elif menu == "Welcome":
@@ -174,17 +186,7 @@ elif menu == "Transfer":
     if st.button("Transfer"):
         transfer_amount(user["name"], user["pin"], receiver, amount)
 
-# ---------- FIND ACCOUNT ----------
-elif menu == "Find Account":
-    search_name = st.text_input("Enter Name to Search", key="find_name")
-    if st.button("Search"):
-        found = False
-        for acc in accounts:
-            if acc["name"].lower() == search_name.lower():
-                st.info(f"Account Found — {acc}")
-                found = True
-        if not found:
-            st.error("Account Not Found!")
+
 
 # ---------- LOGOUT ----------
 elif menu == "Logout":
